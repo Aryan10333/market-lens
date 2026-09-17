@@ -109,6 +109,20 @@ CI (`.github/workflows/ci.yml`) then runs automatically on every push.
 
 Every push to `main` now deploys automatically.
 
+**Which URL to use:** each deploy gets its own URL like `market-lens-abc123-yourteam.vercel.app`. Those are
+protected by *Vercel Authentication* (only your Vercel account can open them). Give users, and put into
+Supabase, the **production domain** shown in Vercel → Project → Settings → **Domains**
+(for example `market-lens-yourteam.vercel.app`, or your own domain).
+
+**If the build fails with "Missing NEXT_PUBLIC_SUPABASE_URL ...":** the variables are not visible to the build.
+In Vercel → Project → Settings → Environment Variables, check:
+
+- names are spelled exactly `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`,
+- values have no quotes and no spaces,
+- **Production** and **Preview** are both ticked.
+
+Then Deployments → latest → **Redeploy**. Variables added after a build only apply to the next build.
+
 ## Everyday commands
 
 | What | Command |

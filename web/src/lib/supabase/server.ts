@@ -5,8 +5,9 @@ import { cookies } from "next/headers";
 import { supabaseEnv } from "./env";
 
 export async function createClient() {
-  const { url, key } = supabaseEnv();
+  // Read cookies first: it marks the page as per-request, so it is never rendered at build time.
   const cookieStore = await cookies();
+  const { url, key } = supabaseEnv();
 
   return createServerClient(url, key, {
     cookies: {

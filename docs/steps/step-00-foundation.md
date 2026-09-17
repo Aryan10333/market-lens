@@ -107,6 +107,6 @@ Supabase setup, local checks and sign-up are done. Remaining, from [setup.md](..
 
 - [x] `jobs.health_check` prints "Health check passed"
 - [x] `/api/health` returns `"status":"ok"` locally
-- [ ] `/api/health` returns `"status":"ok"` on Vercel
+- [x] `/api/health` returns `"status":"ok"` on Vercel (https://market-lens-tau-five.vercel.app)
 - [x] Two different users can sign up and log in separately
 - [ ] CI is green on GitHub

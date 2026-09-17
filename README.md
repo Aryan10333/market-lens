@@ -6,6 +6,8 @@ each one (stage, fundamentals, four cylinders, MACHINE, RoCE × growth), with AI
 
 Hosted on **Vercel**, data in **Supabase**, AI by **OpenAI**.
 
+Live app: https://market-lens-tau-five.vercel.app
+
 ## Folders
 
 | Folder | What is inside |
