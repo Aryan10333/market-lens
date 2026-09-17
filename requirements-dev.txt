@@ -1,0 +1,4 @@
+# Extra packages for development: tests and code style checks.
+-r requirements.txt
+pytest==9.1.1
+ruff==0.16.8
