@@ -4,6 +4,17 @@ Newest entries at the top. One entry per working session.
 
 ---
 
+## 2026-09-17: Step 0 tested against real Supabase
+
+- Committed Step 0 (`e8c99e3`).
+- Fixed `DATABASE_URL`: switched from the Direct connection host (IPv6-only, unreachable) to the Session pooler.
+- Passed: Python health check, `/api/health` = ok, RLS on all tables, policies + sign-up trigger present,
+  logged-out users cannot read or write data, wrong-password login rejected.
+- Browser sign-up, email confirmation and login work; 2 users confirmed, both with profiles.
+- Remaining: push to GitHub (CI) and deploy on Vercel.
+
+---
+
 ## 2026-09-17: Step 0 Foundation (code)
 
 **Decided** (details in [decisions.md](decisions.md)):

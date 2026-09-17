@@ -3,8 +3,7 @@
 **Goal:** An empty but working app skeleton: website with login, database tables, Python jobs
 setup, automatic checks, and health checks. No market data yet.
 
-**Status:** Code done and tested locally. Waiting for Supabase / GitHub / Vercel accounts to be
-connected (see "What you need to do").
+**Status:** Working locally with the real Supabase project. Remaining: GitHub push (CI) and Vercel deploy.
 
 ## What was built
 
@@ -78,22 +77,36 @@ On every push / pull request:
 | `GET /` while logged out | HTTP 307 redirect to `/login` (correct) |
 | `GET /login` | HTTP 200 |
 
-Not yet checked (needs your Supabase project): migration applied, real sign-up/login,
-health check passing against the real database.
+### Checked against the real Supabase project (2026-09-17)
+
+| Check | Result |
+|---|---|
+| `jobs.health_check` | passed; tables `companies`, `job_runs`, `profiles` found |
+| `GET /api/health` | HTTP 200, `"database":"ok"` |
+| RLS switched on for all 3 tables | yes |
+| Policies and sign-up trigger exist | yes (4 policies, `on_auth_user_created`) |
+| Logged-out visitor reads `companies` | 0 rows visible (blocked, correct) |
+| Logged-out visitor writes `job_runs` | blocked by RLS (correct) |
+| Login with wrong password | rejected (correct) |
+
+Problem found and fixed: `DATABASE_URL` first used the **Direct connection** host
+(`db.<ref>.supabase.co`), which is IPv6-only and could not be reached. Use the **Session pooler**
+string instead (host ends in `pooler.supabase.com`, user `postgres.<ref>`).
+
+Checked by hand in the browser: sign-up, email confirmation and login work. 2 users signed up and confirmed; each got a `profiles` row automatically.
 
 ## What you need to do
 
-Follow [setup.md](../setup.md) sections **D → G**:
+Supabase setup, local checks and sign-up are done. Remaining, from [setup.md](../setup.md):
 
-1. Create the Supabase project, fill in `.env` and `web\.env.local`.
-2. Run `npx supabase db push` to create the tables.
-3. Run `.venv\Scripts\python -m jobs.health_check` and open `http://localhost:3000`, then sign up.
-4. Push to a private GitHub repo; add `DATABASE_URL` secret.
-5. Import into Vercel with Root Directory `web`.
+1. **F:** Push to GitHub (`origin` = `github.com/Aryan10333/market-lens`); add the `DATABASE_URL` secret.
+2. **G:** Import into Vercel with Root Directory `web`; add the two `NEXT_PUBLIC_SUPABASE_*` variables;
+   add the Vercel URL to Supabase Site URL and Redirect URLs.
 
 ## Done when
 
-- [ ] `jobs.health_check` prints "Health check passed"
-- [ ] `/api/health` returns `"status":"ok"` locally and on Vercel
-- [ ] Two different users can sign up and log in separately
+- [x] `jobs.health_check` prints "Health check passed"
+- [x] `/api/health` returns `"status":"ok"` locally
+- [ ] `/api/health` returns `"status":"ok"` on Vercel
+- [x] Two different users can sign up and log in separately
 - [ ] CI is green on GitHub
