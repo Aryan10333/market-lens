@@ -145,6 +145,36 @@ def main() -> int:
                 f"{sym} {ex}: '{desc}' expects x{factor:.4f} but prices moved x{observed:.4f}"
             )
 
+        # --- calculated features (Step 2) ---
+        feature_rows, feature_companies, feature_last, versions = q(
+            "select count(*), count(distinct company_id), max(trade_date), "
+            "count(distinct feature_version) from public.daily_features"
+        )[0]
+        lines.append(
+            f"Feature rows: {feature_rows:,} for {feature_companies} companies, "
+            f"latest {feature_last}"
+        )
+        if feature_rows == 0:
+            problems.append("no features calculated; run jobs.build_features")
+        elif feature_last != last:
+            problems.append(f"features end at {feature_last} but prices end at {last}")
+        if versions > 1:
+            warnings.append(f"{versions} different feature versions stored; rebuild with --rebuild")
+
+        weekly_rows, weekly_last = q("select count(*), max(week_end) from public.weekly_prices")[0]
+        lines.append(f"Weekly bars: {weekly_rows:,}, latest week ending {weekly_last}")
+
+        # Long-window features only exist once there is enough history, so check the latest day.
+        filled = q(
+            "select count(*), count(sma_200), count(wma_30w), count(high_52w), count(rs_rank_63d) "
+            "from public.daily_features where trade_date = %s",
+            feature_last,
+        )[0]
+        lines.append(
+            f"On {feature_last}: {filled[0]} companies, with 200-day average {filled[1]}, "
+            f"30-week average {filled[2]}, 52-week levels {filled[3]}, RS rank {filled[4]}"
+        )
+
         size = q("select pg_size_pretty(pg_database_size(current_database()))")[0][0]
         lines.append(f"Database size: {size} (Supabase Free limit: 500 MB)")
 

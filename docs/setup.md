@@ -132,7 +132,8 @@ To load data from your own PC instead:
 .venv\Scripts\python -m jobs.sync_universe       # 1. company list
 .venv\Scripts\python -m jobs.load_prices         # 2. prices (first run ~40 min for 3 years)
 .venv\Scripts\python -m jobs.load_corporate_actions  # 3. splits/bonuses
-.venv\Scripts\python -m jobs.check_data          # 4. report
+.venv\Scripts\python -m jobs.build_features      # 4. calculations (averages, 52w, RS...)
+.venv\Scripts\python -m jobs.check_data          # 5. report
 ```
 
 ## Everyday commands
@@ -152,4 +153,6 @@ To load data from your own PC instead:
 | Load new prices | `.venv\Scripts\python -m jobs.load_prices` |
 | Re-load a date range | `.venv\Scripts\python -m jobs.load_prices --start 2026-09-01 --end 2026-09-05 --reload` |
 | Load splits/bonuses | `.venv\Scripts\python -m jobs.load_corporate_actions` |
+| Calculate features | `.venv\Scripts\python -m jobs.build_features` |
+| Recalculate everything | `.venv\Scripts\python -m jobs.build_features --rebuild` |
 | Data quality report | `.venv\Scripts\python -m jobs.check_data` |

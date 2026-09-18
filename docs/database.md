@@ -157,6 +157,59 @@ Access: logged-in users read; jobs write.
 
 ---
 
+## weekly_prices
+
+Weekly bars built from the daily prices, used for the 30-week average and weekly charts.
+Prices here are **split-adjusted**.
+
+| Column | Type | Meaning |
+|---|---|---|
+| company_id | bigint | The company |
+| week_start | date | Monday of that week |
+| week_end | date | Last trading day in that week |
+| open, high, low, close | numeric(14,4) | The week's bar |
+| volume | bigint | Shares traded that week |
+| trading_days | smallint | Days the market was open that week (3 in a holiday week) |
+
+Access: logged-in users read; jobs write.
+
+---
+
+## daily_features
+
+One row per company per day, holding every calculated value. Written by `jobs.build_features`.
+Prices here are **split-adjusted**, so they can be compared across time.
+
+| Column | Meaning |
+|---|---|
+| feature_version | Which version of the calculations produced this row (`features_v1`) |
+| close_adj | Split-adjusted close |
+| return_1d … return_252d | Price change over 1, 5, 21, 63 and 252 trading days (0.05 = +5%) |
+| sma_20, sma_50, sma_100, sma_200 | Daily moving averages |
+| wma_30w | 30-week moving average (the Stage analysis reference) |
+| wma_30w_slope | Its change over the last 10 weeks (positive = rising trend) |
+| volume_avg_20 | 20-day average volume |
+| volume_ratio_20 | Today's volume ÷ that average (2.4 = "2.4× normal") |
+| value_avg_20 | 20-day average traded value in ₹ (liquidity) |
+| high_52w, low_52w | Highest high and lowest low of the last 252 trading days |
+| pct_from_high_52w | How far below the 52-week high (0.032 = 3.2% below) |
+| pct_above_low_52w | How far above the 52-week low |
+| volatility_21d | Yearly volatility from the last 21 daily returns |
+| range_high_120, range_low_120 | Consolidation range over 120 days, **ending yesterday** |
+| range_width_120 | Range height as a fraction of its low |
+| days_in_range | Days in a row the close stayed inside the range (0 = outside it now) |
+| rs_ratio | Adjusted close ÷ Nifty 500 close |
+| rs_change_63d, rs_change_252d | Change in that ratio over 3 months / 1 year |
+| rs_rank_63d | 0–100 rank of rs_change_63d against the rest of the universe that day |
+| calculated_at | When the row was calculated |
+
+Long-window values stay empty until enough history exists (`sma_200` needs 200 trading days),
+so no number is ever based on a partial window.
+
+Access: logged-in users read; jobs write.
+
+---
+
 ## supabase_migrations.schema_migrations
 
 Which migration files have been applied (used by `jobs.migrate` and the Supabase CLI).

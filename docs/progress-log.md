@@ -4,6 +4,21 @@ Newest entries at the top. One entry per working session.
 
 ---
 
+## 2026-09-18: Step 2 Technical features
+
+- New `jobs/features.py`: split adjustment, weekly bars, moving averages (incl. 30-week + slope),
+  returns, volume ratios, 52-week levels, volatility, consolidation range, relative strength vs
+  Nifty 500 and a 0-100 universe rank. All pure functions, stamped `features_v1`.
+- New tables `weekly_prices` and `daily_features`; job `jobs/build_features.py` (incremental,
+  `--rebuild` after a rule change); added to the daily workflow before `check_data`.
+- Built the full history: 351,651 feature rows + 74,229 weekly bars in 8 minutes.
+- Verified: RELIANCE's 1:1 bonus adjusts to exactly half with no break in the moving average;
+  coverage and value ranges sensible; holiday week shows 3 trading days.
+- 15 new tests (59 total). Database now 190 MB of the 500 MB free limit.
+- Next: Step 3 scanners.
+
+---
+
 ## 2026-09-18: Step 1 finished loading and checking
 
 - Added reconnect-and-retry to `load_prices` (a sleeping laptop had killed the first run).

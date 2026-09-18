@@ -36,5 +36,7 @@ jobs:
         run: python -m jobs.load_prices
       - name: Load splits and bonuses (corporate actions)
         run: python -m jobs.load_corporate_actions
+      - name: Calculate technical features
+        run: python -m jobs.build_features
       - name: Check data quality
         run: python -m jobs.check_data

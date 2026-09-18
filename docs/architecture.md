@@ -36,6 +36,8 @@
 
  NSE corporate actions -> load_corporate_actions -> price_adjustments
 
+ daily_prices + actions -> build_features -----> weekly_prices, daily_features
+
  all tables ──────────> check_data ──────> report (fails the workflow on serious problems)
 ```
 
@@ -83,6 +85,8 @@ market-lens/
     sync_universe.py      job: Nifty 500 list -> companies, universe_members
     load_prices.py        job: NSE files -> daily_prices, index_prices, price_files
     load_corporate_actions.py  job: NSE corporate actions -> price_adjustments
+    features.py           the calculations (moving averages, 52-week levels, RS...)
+    build_features.py     job: prices -> weekly_prices, daily_features
     check_data.py         job: data quality report
   tests/                  Python tests (pytest)
   supabase/

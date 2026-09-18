@@ -6,7 +6,7 @@ import { logout } from "./login/actions";
 export default async function Home() {
   const supabase = await createClient();
 
-  const [claims, members, firstFile, lastFile, benchmark, runs] = await Promise.all([
+  const [claims, members, firstFile, lastFile, benchmark, features, runs] = await Promise.all([
     supabase.auth.getClaims(),
     supabase
       .from("universe_members")
@@ -37,6 +37,12 @@ export default async function Home() {
       .limit(1)
       .maybeSingle(),
     supabase
+      .from("daily_features")
+      .select("trade_date, feature_version")
+      .order("trade_date", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase
       .from("job_runs")
       .select("id, job_name, status, started_at, message")
       .order("started_at", { ascending: false })
@@ -44,7 +50,9 @@ export default async function Home() {
   ]);
 
   const email = String(claims.data?.claims.email ?? "unknown");
-  const loadError = [members, firstFile, lastFile, benchmark, runs].find((r) => r.error)?.error;
+  const loadError = [members, firstFile, lastFile, benchmark, features, runs].find(
+    (r) => r.error,
+  )?.error;
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-10">
@@ -83,6 +91,14 @@ export default async function Home() {
             <dd>
               {lastFile.data
                 ? `${lastFile.data.trade_date} · ${lastFile.data.rows_saved} companies`
+                : "none yet"}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-neutral-500">Calculations</dt>
+            <dd>
+              {features.data
+                ? `up to ${features.data.trade_date} · ${features.data.feature_version}`
                 : "none yet"}
             </dd>
           </div>
