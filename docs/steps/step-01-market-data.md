@@ -3,7 +3,7 @@
 **Goal:** A reliable, automatically updated dataset for the Nifty 500: company list, 3 years of
 daily prices, all NSE index values, and detected splits/bonuses, with checks that prove it is correct.
 
-**Status:** Built, loaded and checked locally. Waiting for the first scheduled run on GitHub Actions.
+**Status:** Done. Data loaded and checked; the scheduled GitHub workflow runs successfully.
 
 ## Decisions made in this step
 
@@ -139,4 +139,4 @@ Result: OK
 - [x] Splits/bonuses loaded and all cross-checked against prices
 - [x] Data quality report passes
 - [x] Home page shows the data status
-- [ ] Scheduled GitHub run works (confirms NSE allows downloads from GitHub's servers)
+- [x] Scheduled GitHub run works (NSE downloads are not blocked from GitHub's servers)

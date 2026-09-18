@@ -17,7 +17,10 @@ Newest entries at the top. One entry per working session.
   buybacks and preference-share bonuses). Two actions on the same ex-date now multiply.
 - Result: 75 actions over 3 years, all 75 matching the price move on their ex-date.
 - Tests: 44 pass. Database size 87 MB of the 500 MB free limit.
-- Remaining for Step 1: commit, push, and run the scheduled workflow once from GitHub.
+- Committed and pushed (`ee0404d`). CI green.
+- First "Daily market data" run on GitHub Actions succeeded: NSE downloads work from GitHub's
+  servers. It ran at 10:01 IST while the market was open, so no new prices yet - the 19:00 IST
+  run picks those up. **Step 1 done.**
 
 ---
 
