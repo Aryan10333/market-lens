@@ -59,17 +59,67 @@ Each decision: what we chose, and why. Newest decisions go at the bottom.
 ## D8. Database changes as SQL files
 
 - **Chosen:** Every change to the database is a numbered `.sql` file in `supabase/migrations/`,
-  applied with the Supabase CLI (`npx supabase db push`).
+  applied with `.venv\Scripts\python -m jobs.migrate`.
 - **Why:** Plain SQL is easy to read. The folder is a complete history of how the database was built.
+  `jobs.migrate` records applied files in the same table the Supabase CLI uses, so
+  `npx supabase db push` also still works.
   Never change the database by hand in the dashboard without also adding a migration file.
 
-## D9. Price data source (to be finalised in Step 1)
+## D9. Price data source: NSE bhavcopy
 
-- **Plan:** Official daily "bhavcopy" files from NSE and BSE for the daily update, plus a one-time
-  historical backfill. Splits and bonuses must be handled so the history is not broken.
-- **Status:** Will be tested and confirmed in Step 1.
+- **Chosen:** Official NSE daily "bhavcopy" files (end-of-day prices for every listed share),
+  plus NSE's daily index closing file for all indices.
+- **Formats:** NSE changed the file format in January 2024. The loader reads both:
+  new "UDiFF" files first, older "legacy" files as fallback.
+- **BSE:** used only to fill in each company's BSE code (matched by ISIN). Every Nifty 500 company
+  trades on NSE, so NSE prices are enough for now.
+- **Why:** Official, free, complete, and the same data the TechnoFunda method builds its screens from.
 
 ## D10. Fundamentals source (to be decided in Step 6)
 
 - **Status:** Open. There is no clean free API for Indian company financials. Options: CSV export
   upload, a paid data API, or parsing exchange filings.
+
+## D11. Universe: Nifty 500 (for now)
+
+- **Chosen:** The 500 companies in NSE's Nifty 500 index, refreshed from NSE's list every run.
+- **Why:** Small enough to build and check each step quickly, and fits the Supabase Free plan.
+  Covers large, mid and many small caps. Can be widened later (e.g. all liquid NSE + BSE stocks).
+- **Membership history:** `universe_members` records when a company joins or leaves the index.
+- **Known limitation:** history before today uses *today's* member list. Backtests (Step 12) must
+  account for this "survivorship bias".
+
+## D12. Price history: 3 years
+
+- **Chosen:** Load 3 years of daily prices the first time (setting `PRICE_HISTORY_YEARS`).
+- **Why:** Enough for the 30-week moving average, 52-week high/low, multi-year consolidation
+  ranges and first backtests. About 45 MB of storage.
+
+## D13. Supabase plan: Free (for now)
+
+- **Chosen:** Supabase Free (500 MB database).
+- **Effect:** Keep the universe and history compact. `check_data` prints the database size each run.
+  Upgrade to Pro when storage gets close to the limit.
+
+## D14. Raw prices + official corporate actions
+
+- **Chosen:** Store prices exactly as published. Take splits, bonuses and consolidations from
+  **NSE's official corporate actions list**, and store the exact factor in `price_adjustments`.
+- **Why:** Stored numbers always match the exchange file (easy to verify). Calculations (Step 2)
+  multiply older prices by the factor, so a split does not look like a crash.
+- **First attempt, and why it failed:** the original plan was to spot splits in the prices,
+  assuming NSE publishes an adjusted "previous close" on the ex-date. It does not: on RELIANCE's
+  bonus ex-date the share opened at 1337 while `prev_close` still said 2655.70. That rule produced
+  777 fake "splits" and missed every real one.
+- **Factors:** bonus a:b → b/(a+b) (1:1 = 0.5); split Rs X → Rs Y → Y/X (10 → 1 = 0.1);
+  consolidation → above 1. Two actions on the same day multiply.
+- **Ignored:** dividends, rights issues, buybacks, demergers, and bonus issues of preference
+  shares (NCRPS) — none of them multiply the equity share count.
+- **Self-check:** each action is stored with the price move actually seen on its ex-date, and
+  `check_data` warns when the two disagree by more than 25%.
+
+## D15. Daily schedule
+
+- **Chosen:** GitHub Actions runs the data jobs at 19:00 and 22:00 IST, Monday to Friday.
+- **Why:** NSE publishes files in the evening. The second run catches late files.
+  Runs are incremental, so a repeat run costs almost nothing.

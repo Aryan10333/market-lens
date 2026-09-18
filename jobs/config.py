@@ -19,6 +19,7 @@ class Settings:
     log_level: str
     database_url: str
     openai_api_key: str
+    price_history_years: int
 
 
 def load_settings(env: dict[str, str] | None = None) -> Settings:
@@ -35,11 +36,18 @@ def load_settings(env: dict[str, str] | None = None) -> Settings:
     if log_level not in VALID_LOG_LEVELS:
         raise ConfigError(f"LOG_LEVEL must be one of {sorted(VALID_LOG_LEVELS)}, got '{log_level}'")
 
+    years_text = env.get("PRICE_HISTORY_YEARS", "3").strip()
+    if not years_text.isdigit() or not 1 <= int(years_text) <= 20:
+        raise ConfigError(
+            f"PRICE_HISTORY_YEARS must be a whole number from 1 to 20, got '{years_text}'"
+        )
+
     return Settings(
         app_env=app_env,
         log_level=log_level,
         database_url=env.get("DATABASE_URL", "").strip(),
         openai_api_key=env.get("OPENAI_API_KEY", "").strip(),
+        price_history_years=int(years_text),
     )
 
 

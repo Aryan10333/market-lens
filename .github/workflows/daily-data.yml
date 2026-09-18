@@ -1,0 +1,40 @@
+# Daily market data: runs the Python jobs after the Indian market closes.
+# NSE usually publishes the day's files by 6-7 pm IST. The second run at 10 pm IST
+# picks up anything that was late; runs are incremental, so a repeat costs little.
+# Can also be started by hand: GitHub -> Actions -> "Daily market data" -> Run workflow.
+name: Daily market data
+
+on:
+  schedule:
+    - cron: "30 13 * * 1-5" # 19:00 IST, Monday-Friday
+    - cron: "30 16 * * 1-5" # 22:00 IST, Monday-Friday
+  workflow_dispatch:
+
+concurrency:
+  group: daily-data
+  cancel-in-progress: false
+
+jobs:
+  load:
+    name: Load and check market data
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      APP_ENV: production
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+
+      - name: Sync Nifty 500 universe
+        run: python -m jobs.sync_universe
+      - name: Load prices
+        run: python -m jobs.load_prices
+      - name: Load splits and bonuses (corporate actions)
+        run: python -m jobs.load_corporate_actions
+      - name: Check data quality
+        run: python -m jobs.check_data

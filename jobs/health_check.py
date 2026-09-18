@@ -1,4 +1,4 @@
-"""Checks that the jobs can reach the database and that the foundation tables exist.
+"""Checks that the jobs can reach the database and that the expected tables exist.
 
 Run from the project folder:  .venv\\Scripts\\python -m jobs.health_check
 """
@@ -12,7 +12,16 @@ from jobs.log import setup_logging
 
 log = logging.getLogger("health_check")
 
-EXPECTED_TABLES = ["profiles", "companies", "job_runs"]
+EXPECTED_TABLES = [
+    "profiles",
+    "companies",
+    "job_runs",
+    "universe_members",
+    "price_files",
+    "daily_prices",
+    "index_prices",
+    "price_adjustments",
+]
 
 
 def main() -> int:
@@ -42,7 +51,7 @@ def main() -> int:
     missing = [t for t in EXPECTED_TABLES if t not in found]
     if missing:
         log.error(
-            "Database reachable but tables are missing. Run the migrations.",
+            "Database reachable but tables are missing. Run: python -m jobs.migrate",
             extra={"fields": {"missing_tables": missing}},
         )
         return 1

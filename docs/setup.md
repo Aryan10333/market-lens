@@ -44,15 +44,11 @@ npm install
 3. Create the settings files:
    - Copy `web\.env.example` to `web\.env.local` and fill in URL + publishable key.
    - Copy `.env.example` to `.env` and fill in `DATABASE_URL`.
-4. Create the tables (runs `supabase/migrations/*.sql` on your project):
+4. Create the tables (runs every `supabase/migrations/*.sql` file not applied yet):
 
    ```powershell
-   npx supabase login
-   npx supabase link --project-ref YOUR_PROJECT_REF
-   npx supabase db push
+   .venv\Scripts\python -m jobs.migrate
    ```
-
-   The project ref is the part of the URL before `.supabase.co`.
 5. Login settings: Authentication → URL Configuration:
    - **Site URL:** `http://localhost:3000` (change to the Vercel URL after deploying).
    - **Redirect URLs:** add `http://localhost:3000/auth/confirm`.
@@ -123,6 +119,22 @@ In Vercel → Project → Settings → Environment Variables, check:
 
 Then Deployments → latest → **Redeploy**. Variables added after a build only apply to the next build.
 
+## H. Daily market data (one time)
+
+1. Make sure the GitHub secret `DATABASE_URL` is set (section F).
+2. GitHub → **Actions** → **Daily market data** → **Run workflow** to test it once.
+3. After that it runs by itself every weekday at 19:00 and 22:00 IST.
+4. If a run fails, open it: the **Check data quality** step prints a report.
+
+To load data from your own PC instead:
+
+```powershell
+.venv\Scripts\python -m jobs.sync_universe       # 1. company list
+.venv\Scripts\python -m jobs.load_prices         # 2. prices (first run ~40 min for 3 years)
+.venv\Scripts\python -m jobs.load_corporate_actions  # 3. splits/bonuses
+.venv\Scripts\python -m jobs.check_data          # 4. report
+```
+
 ## Everyday commands
 
 | What | Command |
@@ -133,5 +145,11 @@ Then Deployments → latest → **Redeploy**. Variables added after a build only
 | Check DB connection | `.venv\Scripts\python -m jobs.health_check` |
 | Start website locally | `cd web` then `npm run dev` |
 | Check website code | `cd web` then `npm run lint` and `npm run build` |
-| Create a new DB migration | `npx supabase migration new short_name` |
-| Apply migrations | `npx supabase db push` |
+| Create a new DB migration | add `supabase\migrations\YYYYMMDDHHMMSS_short_name.sql` |
+| See applied / pending migrations | `.venv\Scripts\python -m jobs.migrate --list` |
+| Apply migrations | `.venv\Scripts\python -m jobs.migrate` |
+| Update company list | `.venv\Scripts\python -m jobs.sync_universe` |
+| Load new prices | `.venv\Scripts\python -m jobs.load_prices` |
+| Re-load a date range | `.venv\Scripts\python -m jobs.load_prices --start 2026-09-01 --end 2026-09-05 --reload` |
+| Load splits/bonuses | `.venv\Scripts\python -m jobs.load_corporate_actions` |
+| Data quality report | `.venv\Scripts\python -m jobs.check_data` |

@@ -4,3 +4,7 @@ target-version = "py312"
 
 [lint]
 select = ["E", "F", "I", "B", "UP"]
+
+# Test files contain copies of real exchange rows, which are long.
+[lint.per-file-ignores]
+"tests/*" = ["E501"]
