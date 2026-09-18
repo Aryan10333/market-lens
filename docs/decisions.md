@@ -123,3 +123,29 @@ Each decision: what we chose, and why. Newest decisions go at the bottom.
 - **Chosen:** GitHub Actions runs the data jobs at 19:00 and 22:00 IST, Monday to Friday.
 - **Why:** NSE publishes files in the evening. The second run catches late files.
   Runs are incremental, so a repeat run costs almost nothing.
+
+## D16. Scanner thresholds live in a versioned config file
+
+- **Chosen:** `config/scanners.json` holds every threshold and a version (`scanner_v2`). The first
+  run of a version copies the whole file into `rule_versions`; later runs refuse to start if the
+  file changed without the version changing.
+- **Why:** The spec requires that a signal can always be traced to the exact rules that produced
+  it, and that the same data plus the same version gives the same result.
+- **Effect:** Changing a threshold or a rule means bumping the version. Old signals keep their old
+  version and stay explainable.
+
+## D17. Signals are events, not states
+
+- **Chosen:** A scanner fires on the day something happens, not every day a condition holds.
+- **Why:** `sector_trend` as a state produced 24,762 signals in 3 years — more than everything else
+  combined — because a leading sector stays leading for weeks. As an event (the day the sector
+  takes the lead, or the stock climbs back above its 30-week average) it produces 4,451, and each
+  one records which of the two started it.
+
+## D18. Keep an eye on storage
+
+- **Chosen:** `build_features` tidies up after a large rewrite, and `check_data` warns when the
+  database passes 400 MB.
+- **Why:** Rewriting 351k feature rows left dead rows that pushed the database from 190 MB to
+  313 MB without adding any data. Tidying brought it back to 186 MB. On the free 500 MB plan that
+  difference matters.

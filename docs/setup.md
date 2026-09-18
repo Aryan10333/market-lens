@@ -133,7 +133,8 @@ To load data from your own PC instead:
 .venv\Scripts\python -m jobs.load_prices         # 2. prices (first run ~40 min for 3 years)
 .venv\Scripts\python -m jobs.load_corporate_actions  # 3. splits/bonuses
 .venv\Scripts\python -m jobs.build_features      # 4. calculations (averages, 52w, RS...)
-.venv\Scripts\python -m jobs.check_data          # 5. report
+.venv\Scripts\python -m jobs.run_scanners        # 5. scanners
+.venv\Scripts\python -m jobs.check_data          # 6. report
 ```
 
 ## Everyday commands
@@ -155,4 +156,6 @@ To load data from your own PC instead:
 | Load splits/bonuses | `.venv\Scripts\python -m jobs.load_corporate_actions` |
 | Calculate features | `.venv\Scripts\python -m jobs.build_features` |
 | Recalculate everything | `.venv\Scripts\python -m jobs.build_features --rebuild` |
+| Run scanners (latest day) | `.venv\Scripts\python -m jobs.run_scanners` |
+| Replay scanners over history | `.venv\Scripts\python -m jobs.run_scanners --from 2023-09-18` |
 | Data quality report | `.venv\Scripts\python -m jobs.check_data` |

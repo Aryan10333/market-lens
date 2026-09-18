@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { logout } from "./login/actions";
 
@@ -6,61 +7,77 @@ import { logout } from "./login/actions";
 export default async function Home() {
   const supabase = await createClient();
 
-  const [claims, members, firstFile, lastFile, benchmark, features, runs] = await Promise.all([
-    supabase.auth.getClaims(),
-    supabase
-      .from("universe_members")
-      .select("*", { count: "exact", head: true })
-      .eq("universe", "NIFTY500")
-      .is("removed_on", null),
-    supabase
-      .from("price_files")
-      .select("trade_date")
-      .eq("kind", "equity")
-      .eq("status", "loaded")
-      .order("trade_date", { ascending: true })
-      .limit(1)
-      .maybeSingle(),
-    supabase
-      .from("price_files")
-      .select("trade_date, rows_saved, loaded_at")
-      .eq("kind", "equity")
-      .eq("status", "loaded")
-      .order("trade_date", { ascending: false })
-      .limit(1)
-      .maybeSingle(),
-    supabase
-      .from("index_prices")
-      .select("trade_date, close")
-      .eq("index_name", "Nifty 500")
-      .order("trade_date", { ascending: false })
-      .limit(1)
-      .maybeSingle(),
-    supabase
-      .from("daily_features")
-      .select("trade_date, feature_version")
-      .order("trade_date", { ascending: false })
-      .limit(1)
-      .maybeSingle(),
-    supabase
-      .from("job_runs")
-      .select("id, job_name, status, started_at, message")
-      .order("started_at", { ascending: false })
-      .limit(8),
-  ]);
+  const [claims, members, firstFile, lastFile, benchmark, features, runs] =
+    await Promise.all([
+      supabase.auth.getClaims(),
+      supabase
+        .from("universe_members")
+        .select("*", { count: "exact", head: true })
+        .eq("universe", "NIFTY500")
+        .is("removed_on", null),
+      supabase
+        .from("price_files")
+        .select("trade_date")
+        .eq("kind", "equity")
+        .eq("status", "loaded")
+        .order("trade_date", { ascending: true })
+        .limit(1)
+        .maybeSingle(),
+      supabase
+        .from("price_files")
+        .select("trade_date, rows_saved, loaded_at")
+        .eq("kind", "equity")
+        .eq("status", "loaded")
+        .order("trade_date", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      supabase
+        .from("index_prices")
+        .select("trade_date, close")
+        .eq("index_name", "Nifty 500")
+        .order("trade_date", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      supabase
+        .from("daily_features")
+        .select("trade_date, feature_version")
+        .order("trade_date", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      supabase
+        .from("job_runs")
+        .select("id, job_name, status, started_at, message")
+        .order("started_at", { ascending: false })
+        .limit(8),
+    ]);
 
   const email = String(claims.data?.claims.email ?? "unknown");
-  const loadError = [members, firstFile, lastFile, benchmark, features, runs].find(
-    (r) => r.error,
-  )?.error;
+  const loadError = [
+    members,
+    firstFile,
+    lastFile,
+    benchmark,
+    features,
+    runs,
+  ].find((r) => r.error)?.error;
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-10">
       <header className="flex items-center justify-between gap-4">
         <h1 className="text-2xl font-semibold">Market Lens</h1>
-        <form action={logout}>
-          <button className="rounded border px-3 py-1.5 text-sm">Log out</button>
-        </form>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/scanner"
+            className="rounded border px-3 py-1.5 text-sm hover:bg-neutral-50"
+          >
+            Scanner
+          </Link>
+          <form action={logout}>
+            <button className="rounded border px-3 py-1.5 text-sm">
+              Log out
+            </button>
+          </form>
+        </div>
       </header>
 
       <p className="text-sm text-neutral-500">Logged in as {email}</p>
@@ -129,16 +146,24 @@ export default async function Home() {
               <tbody>
                 {runs.data.map((r) => (
                   <tr key={r.id} className="border-t align-top">
-                    <td className="py-1.5 pr-3 whitespace-nowrap">{r.job_name}</td>
+                    <td className="py-1.5 pr-3 whitespace-nowrap">
+                      {r.job_name}
+                    </td>
                     <td
                       className={`py-1.5 pr-3 ${
-                        r.status === "failed" ? "text-red-700" : r.status === "running" ? "text-amber-700" : ""
+                        r.status === "failed"
+                          ? "text-red-700"
+                          : r.status === "running"
+                            ? "text-amber-700"
+                            : ""
                       }`}
                     >
                       {r.status}
                     </td>
                     <td className="py-1.5 pr-3 whitespace-nowrap">
-                      {new Date(r.started_at).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })}
+                      {new Date(r.started_at).toLocaleString("en-IN", {
+                        timeZone: "Asia/Kolkata",
+                      })}
                     </td>
                     <td className="py-1.5 text-neutral-600">{r.message}</td>
                   </tr>

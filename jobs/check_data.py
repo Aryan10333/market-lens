@@ -175,7 +175,33 @@ def main() -> int:
             f"30-week average {filled[2]}, 52-week levels {filled[3]}, RS rank {filled[4]}"
         )
 
+        # --- scanner signals (Step 3) ---
+        signal_total, signal_last = q("select count(*), max(trade_date) from public.signals")[0]
+        lines.append(f"Signals: {signal_total:,}, latest {signal_last}")
+        by_scanner = q("select scanner, count(*) from public.signals group by 1 order by 2 desc")
+        if by_scanner:
+            lines.append("  " + ", ".join(f"{name} {count:,}" for name, count in by_scanner))
+        latest_day = q(
+            "select scanner, count(*) from public.signals where trade_date = %s group by 1 "
+            "order by 2 desc",
+            signal_last,
+        )
+        lines.append(
+            f"On {signal_last}: "
+            + (", ".join(f"{name} {count}" for name, count in latest_day) or "nothing triggered")
+        )
+        if signal_total and signal_last != last:
+            warnings.append(f"signals end at {signal_last} but prices end at {last}")
+        versions = q("select version from public.rule_versions order by version")
+        lines.append("Rule versions: " + ", ".join(v for (v,) in versions))
+
+        size_bytes = q("select pg_database_size(current_database())")[0][0]
         size = q("select pg_size_pretty(pg_database_size(current_database()))")[0][0]
+        if size_bytes > 400 * 1024 * 1024:
+            warnings.append(
+                f"database is {size}, close to the 500 MB free limit; "
+                "consider Supabase Pro or trimming history"
+            )
         lines.append(f"Database size: {size} (Supabase Free limit: 500 MB)")
 
     print("=== Market data check ===")

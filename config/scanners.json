@@ -1,0 +1,43 @@
+{
+  "version": "scanner_v2",
+  "notes": "Thresholds for the V1 scanners. Change a number here, or change a rule in jobs/scanners.py, and bump the version. v2: sector_trend only fires on the day the condition becomes true.",
+
+  "liquidity": {
+    "min_value_avg_20": 10000000,
+    "_comment": "Ignore stocks trading under Rs 1 crore a day on average: too thin to act on."
+  },
+
+  "consolidation_breakout": {
+    "min_days_in_range": 60,
+    "max_range_width": 0.60,
+    "min_volume_ratio": 1.5,
+    "_comment": "Price leaves a range it stayed inside for 60+ days, on above-average volume."
+  },
+
+  "new_high_breakout": {
+    "max_pct_from_high_52w": 0.005,
+    "min_volume_ratio": 1.2,
+    "require_rising_30w": true,
+    "_comment": "Within 0.5% of the 52-week high, with the 30-week average rising."
+  },
+
+  "volume_expansion": {
+    "min_volume_ratio": 3.0,
+    "min_return_1d": 0.0,
+    "_comment": "Volume at least 3x its 20-day average, price not down."
+  },
+
+  "price_volume_surge": {
+    "min_return_1d": 0.04,
+    "min_volume_ratio": 2.0,
+    "_comment": "Price up 4%+ with volume at least twice normal (the methodology's first-level screen)."
+  },
+
+  "sector_trend": {
+    "min_sector_rank": 80.0,
+    "min_relative_21d": 0.0,
+    "min_rs_rank_63d": 50.0,
+    "require_above_30w": true,
+    "_comment": "Stock above its 30-week average, in a sector beating the market and ranked in the top 20% of sectors. Only on the day this becomes true."
+  }
+}

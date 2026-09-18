@@ -4,6 +4,23 @@ Newest entries at the top. One entry per working session.
 
 ---
 
+## 2026-09-18: Step 3 Scanner V1
+
+- Five scanners as pure functions (`jobs/scanners.py`) with thresholds in `config/scanners.json`,
+  versioned and enforced: the job refuses to run if the file changes without a version bump.
+- Sector trends added to the feature build (18 of 20 sectors have an NSE index).
+- New tables `sector_features`, `rule_versions`, `signals`; job `jobs/run_scanners.py`.
+- Replayed 3 years: 22,076 signals. Sample check: GRAPHITE broke an 80-day range on 12.9x volume.
+- **Changed `sector_trend` to fire only on the day it becomes true** - as a state it produced
+  24,762 signals (60% of all). Now 4,451. Bumped rules to `scanner_v2` and re-ran.
+- **Fixed storage bloat**: rewriting all feature rows left dead rows (190 -> 313 MB). After
+  tidying: 186 MB. `build_features` now cleans up automatically; `check_data` warns above 400 MB.
+- Scanner page in the web app: filter by scanner, each result shows why it triggered.
+- 22 new tests (83 total). Added to the daily workflow.
+- Next: Step 4, the stock analysis page with charts and Stage 1-4.
+
+---
+
 ## 2026-09-18: Step 2 Technical features
 
 - New `jobs/features.py`: split adjustment, weekly bars, moving averages (incl. 30-week + slope),

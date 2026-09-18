@@ -7,6 +7,7 @@ import pytest
 from jobs.features import (
     adjust_for_splits,
     build_features,
+    build_sector_features,
     rank_within_universe,
     weekly_bars,
 )
@@ -152,3 +153,31 @@ def test_empty_input_gives_empty_output():
 def test_rank_within_universe():
     ranks = rank_within_universe(pd.Series([1.0, 2.0, 3.0, 4.0]))
     assert list(ranks) == [25.0, 50.0, 75.0, 100.0]
+
+
+# ---------------------------------------------------------------------------
+# Sector trends
+# ---------------------------------------------------------------------------
+def test_sector_features_compare_each_sector_with_the_benchmark():
+    days = pd.bdate_range(start="2024-01-01", periods=30)
+    strong = pd.Series([100 + i for i in range(30)], index=days, dtype="float64")  # rising
+    weak = pd.Series([100 - i * 0.5 for i in range(30)], index=days, dtype="float64")  # falling
+    benchmark = pd.Series([1000] * 30, index=days, dtype="float64")  # flat
+
+    out = build_sector_features(
+        {"Information Technology": strong, "Metals & Mining": weak}, benchmark
+    )
+    last_day = out[out["trade_date"] == days[-1]].set_index("sector")
+
+    assert last_day.loc["Information Technology", "relative_21d"] > 0  # beating a flat market
+    assert last_day.loc["Metals & Mining", "relative_21d"] < 0
+    # Ranked against each other on the same day: best sector gets 100.
+    assert last_day.loc["Information Technology", "rank_relative_21d"] == 100.0
+    assert last_day.loc["Metals & Mining", "rank_relative_21d"] == 50.0
+    assert set(out["feature_version"]) == {"features_v1"}
+
+
+def test_sector_features_with_nothing_to_compare():
+    empty = pd.Series(dtype="float64")
+    assert build_sector_features({}, empty).empty
+    assert build_sector_features({"Textiles": empty}, empty).empty

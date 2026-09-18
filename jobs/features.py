@@ -159,6 +159,42 @@ def _days_inside_range(close: pd.Series, high: pd.Series, low: pd.Series) -> pd.
     return pd.Series(values, index=close.index, dtype="int64")
 
 
+def build_sector_features(
+    sector_closes: dict[str, pd.Series],
+    benchmark_close: pd.Series,
+) -> pd.DataFrame:
+    """How each sector is doing, and how that compares with the benchmark.
+
+    sector_closes: {sector label: closing values of its NSE index}.
+    Returns one row per sector and day, with the sector's returns, its return minus the
+    benchmark's ("relative"), and a 0-100 rank against the other sectors on that day.
+    """
+    frames = []
+    for sector, closes in sector_closes.items():
+        if closes is None or closes.empty:
+            continue
+        closes = closes.astype("float64").sort_index()
+        bench = benchmark_close.reindex(closes.index).ffill().astype("float64")
+        frame = pd.DataFrame(index=closes.index)
+        frame["sector"] = sector
+        frame["close"] = closes
+        frame["return_21d"] = _pct_change(closes, 21)
+        frame["return_63d"] = _pct_change(closes, 63)
+        frame["relative_21d"] = frame["return_21d"] - _pct_change(bench, 21)
+        frame["relative_63d"] = frame["return_63d"] - _pct_change(bench, 63)
+        frames.append(frame)
+
+    if not frames:
+        return pd.DataFrame()
+
+    combined = pd.concat(frames).reset_index(names="trade_date")
+    combined["rank_relative_21d"] = (
+        combined.groupby("trade_date")["relative_21d"].rank(pct=True) * 100
+    )
+    combined["feature_version"] = FEATURE_VERSION
+    return combined
+
+
 def rank_within_universe(values: pd.Series) -> pd.Series:
     """Rank one day's values across companies, 0 (worst) to 100 (best)."""
     if values.dropna().empty:

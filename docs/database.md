@@ -210,6 +210,59 @@ Access: logged-in users read; jobs write.
 
 ---
 
+## sector_features
+
+How each sector index is doing, and how that compares with the Nifty 500.
+Written by `jobs.build_features`. Sectors are NSE's own labels; 18 of the 20 have an index
+(Textiles and Diversified do not).
+
+| Column | Meaning |
+|---|---|
+| sector | Sector label, e.g. `Information Technology` |
+| trade_date | Trading day |
+| index_name | NSE index used, e.g. `Nifty IT` |
+| close | Index closing value |
+| return_21d, return_63d | Sector return over 1 month / 3 months |
+| relative_21d, relative_63d | Sector return minus the benchmark's over the same period |
+| rank_relative_21d | 0–100 rank against the other sectors that day |
+| feature_version | Which calculation version produced the row |
+
+---
+
+## rule_versions
+
+The exact scanner thresholds behind every signal, kept forever.
+
+| Column | Meaning |
+|---|---|
+| version | e.g. `scanner_v2` |
+| kind | `scanner` |
+| config | The whole configuration file as stored when first used |
+| created_at | When first used |
+
+If `config/scanners.json` changes without its version changing, `jobs.run_scanners` refuses to
+run, so stored signals always match stored rules.
+
+---
+
+## signals
+
+One row per stock that triggered a scanner on a day.
+
+| Column | Meaning |
+|---|---|
+| id | Internal number |
+| company_id | The company |
+| trade_date | The day it triggered |
+| scanner | e.g. `consolidation_breakout` |
+| rule_version | Which thresholds produced it |
+| evidence | The numbers behind the trigger (breakout level, volume ratio, days in range…) |
+| created_at | When it was saved |
+
+One signal per company, day, scanner and rule version. Access: logged-in users read; jobs write.
+
+---
+
 ## supabase_migrations.schema_migrations
 
 Which migration files have been applied (used by `jobs.migrate` and the Supabase CLI).

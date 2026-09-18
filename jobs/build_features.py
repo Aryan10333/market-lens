@@ -21,10 +21,17 @@ import pandas as pd
 
 from jobs.config import ConfigError, load_settings
 from jobs.db import connect
-from jobs.features import FEATURE_VERSION, adjust_for_splits, build_features, rank_within_universe
+from jobs.features import (
+    FEATURE_VERSION,
+    adjust_for_splits,
+    build_features,
+    build_sector_features,
+    rank_within_universe,
+)
 from jobs.features import weekly_bars as to_weekly
 from jobs.log import setup_logging
 from jobs.runs import JobRun
+from jobs.sectors import SECTOR_INDEX
 from jobs.sync_universe import UNIVERSE
 
 log = logging.getLogger("build_features")
@@ -47,6 +54,18 @@ values ({", ".join(["%s"] * (len(FEATURE_COLUMNS) + 3))}, now())
 on conflict (company_id, trade_date) do update set
   feature_version = excluded.feature_version, calculated_at = now(),
   {", ".join(f"{c} = excluded.{c}" for c in FEATURE_COLUMNS)}
+"""
+
+UPSERT_SECTOR = """
+insert into public.sector_features
+  (sector, trade_date, index_name, close, return_21d, return_63d,
+   relative_21d, relative_63d, rank_relative_21d, feature_version)
+values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+on conflict (sector, trade_date) do update set
+  index_name = excluded.index_name, close = excluded.close,
+  return_21d = excluded.return_21d, return_63d = excluded.return_63d,
+  relative_21d = excluded.relative_21d, relative_63d = excluded.relative_63d,
+  rank_relative_21d = excluded.rank_relative_21d, feature_version = excluded.feature_version
 """
 
 UPSERT_WEEKLY = """
@@ -109,7 +128,23 @@ def load_inputs(conn):
         index=pd.to_datetime([d for d, _ in benchmark_rows]),
         dtype="float64",
     )
-    return companies, prices, actions, benchmark
+    sector_closes = {}
+    for sector, index_name in SECTOR_INDEX.items():
+        rows = conn.execute(
+            "select trade_date, close from public.index_prices where index_name = %s "
+            "order by trade_date",
+            (index_name,),
+        ).fetchall()
+        if rows:
+            sector_closes[sector] = pd.Series(
+                [float(c) for _, c in rows],
+                index=pd.to_datetime([d for d, _ in rows]),
+                dtype="float64",
+            )
+        else:
+            log.warning("No index values", extra={"fields": {"index": index_name}})
+
+    return companies, prices, actions, benchmark, sector_closes
 
 
 def main() -> int:
@@ -128,7 +163,7 @@ def main() -> int:
     setup_logging(settings.log_level)
 
     with JobRun(settings, "build_features") as run, connect(settings) as conn:
-        companies, prices, actions, benchmark = load_inputs(conn)
+        companies, prices, actions, benchmark, sector_closes = load_inputs(conn)
         if prices.empty:
             raise RuntimeError("No prices found. Run jobs.load_prices first.")
         if benchmark.empty:
@@ -189,15 +224,41 @@ def main() -> int:
                     + tuple(clean(row[c]) for c in FEATURE_COLUMNS)
                 )
 
+        # Sector trends: how each sector index compares with the benchmark.
+        sectors = build_sector_features(sector_closes, benchmark)
+        sector_rows = []
+        for _, s in sectors.iterrows():
+            day = s["trade_date"].date()
+            if write_from is not None and day < write_from:
+                continue
+            sector_rows.append(
+                (s["sector"], day, SECTOR_INDEX[s["sector"]], clean(s["close"]),
+                 clean(s["return_21d"]), clean(s["return_63d"]), clean(s["relative_21d"]),
+                 clean(s["relative_63d"]), clean(s["rank_relative_21d"]), FEATURE_VERSION)
+            )  # fmt: skip
+
         with conn.transaction():
             with conn.cursor() as cur:
                 cur.executemany(UPSERT_WEEKLY, weekly_rows)
                 cur.executemany(UPSERT_FEATURES, feature_rows)
+                cur.executemany(UPSERT_SECTOR, sector_rows)
 
-        run.rows_written = len(feature_rows) + len(weekly_rows)
+        # Rewriting many rows leaves dead ones behind, which quietly eats the storage
+        # budget. Tidy up after a big run (VACUUM cannot run inside a transaction).
+        if len(feature_rows) > 100_000:
+            conn.commit()
+            previous = conn.autocommit
+            conn.autocommit = True
+            for table in ("daily_features", "weekly_prices", "sector_features"):
+                conn.execute(f"vacuum analyze public.{table}")
+            conn.autocommit = previous
+            log.info("Tidied up storage after a full rebuild")
+
+        run.rows_written = len(feature_rows) + len(weekly_rows) + len(sector_rows)
         run.message = (
-            f"{len(feature_rows)} feature rows and {len(weekly_rows)} weekly bars "
-            f"for {len(features_by_company)} companies ({FEATURE_VERSION})"
+            f"{len(feature_rows)} feature rows, {len(weekly_rows)} weekly bars and "
+            f"{len(sector_rows)} sector rows for {len(features_by_company)} companies "
+            f"({FEATURE_VERSION})"
         )
         log.info("Done", extra={"fields": {"summary": run.message}})
     return 0
