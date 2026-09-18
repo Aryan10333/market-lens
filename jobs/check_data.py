@@ -175,6 +175,20 @@ def main() -> int:
             f"30-week average {filled[2]}, 52-week levels {filled[3]}, RS rank {filled[4]}"
         )
 
+        # --- stages (Step 4) ---
+        stage_rows, stage_last = q("select count(*), max(trade_date) from public.daily_stages")[0]
+        lines.append(f"Stage rows: {stage_rows:,}, latest {stage_last}")
+        if stage_rows and stage_last != last:
+            warnings.append(f"stages end at {stage_last} but prices end at {last}")
+        if stage_last:
+            spread = q(
+                "select stage, count(*) from public.daily_stages where trade_date = %s "
+                "group by 1 order by 1",
+                stage_last,
+            )
+            names = {1: "basing", 2: "advancing", 3: "topping", 4: "declining"}
+            lines.append(f"On {stage_last}: " + ", ".join(f"{names[s]} {n}" for s, n in spread))
+
         # --- scanner signals (Step 3) ---
         signal_total, signal_last = q("select count(*), max(trade_date) from public.signals")[0]
         lines.append(f"Signals: {signal_total:,}, latest {signal_last}")

@@ -38,6 +38,8 @@ jobs:
         run: python -m jobs.load_corporate_actions
       - name: Calculate technical features
         run: python -m jobs.build_features
+      - name: Classify stages
+        run: python -m jobs.classify_stages
       - name: Run scanners
         run: python -m jobs.run_scanners --days 3
       - name: Check data quality

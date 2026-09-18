@@ -20,7 +20,7 @@ from datetime import date
 import pandas as pd
 
 from jobs.config import ConfigError, load_settings
-from jobs.db import connect
+from jobs.db import connect, open_connection, with_reconnect
 from jobs.features import (
     FEATURE_VERSION,
     adjust_for_splits,
@@ -39,7 +39,8 @@ log = logging.getLogger("build_features")
 BENCHMARK = "Nifty 500"
 
 FEATURE_COLUMNS = [
-    "close_adj", "return_1d", "return_5d", "return_21d", "return_63d", "return_252d",
+    "close_adj", "open_adj", "high_adj", "low_adj",
+    "return_1d", "return_5d", "return_21d", "return_63d", "return_252d",
     "sma_20", "sma_50", "sma_100", "sma_200", "wma_30w", "wma_30w_slope",
     "volume_avg_20", "volume_ratio_20", "value_avg_20",
     "high_52w", "low_52w", "pct_from_high_52w", "pct_above_low_52w", "volatility_21d",
@@ -77,6 +78,22 @@ on conflict (company_id, week_start) do update set
   low = excluded.low, close = excluded.close, volume = excluded.volume,
   trading_days = excluded.trading_days
 """
+
+
+BATCH = 10_000  # rows per transaction: small enough to redo after a dropped connection
+
+
+def write_batches(settings, conn, sql: str, rows: list[tuple], what: str):
+    """Write rows in batches, surviving a dropped connection. Returns the live connection."""
+    for start in range(0, len(rows), BATCH):
+        batch = rows[start : start + BATCH]
+
+        def work(c, batch=batch):
+            with c.transaction(), c.cursor() as cur:
+                cur.executemany(sql, batch)
+
+        _, conn = with_reconnect(settings, conn, work, f"{what} rows {start}-{start + len(batch)}")
+    return conn
 
 
 def clean(value):
@@ -237,22 +254,21 @@ def main() -> int:
                  clean(s["relative_63d"]), clean(s["rank_relative_21d"]), FEATURE_VERSION)
             )  # fmt: skip
 
-        with conn.transaction():
-            with conn.cursor() as cur:
-                cur.executemany(UPSERT_WEEKLY, weekly_rows)
-                cur.executemany(UPSERT_FEATURES, feature_rows)
-                cur.executemany(UPSERT_SECTOR, sector_rows)
-
-        # Rewriting many rows leaves dead ones behind, which quietly eats the storage
-        # budget. Tidy up after a big run (VACUUM cannot run inside a transaction).
-        if len(feature_rows) > 100_000:
-            conn.commit()
-            previous = conn.autocommit
-            conn.autocommit = True
-            for table in ("daily_features", "weekly_prices", "sector_features"):
-                conn.execute(f"vacuum analyze public.{table}")
-            conn.autocommit = previous
-            log.info("Tidied up storage after a full rebuild")
+        # Written in batches: one huge transaction used to fail completely if the
+        # connection dropped near the end.
+        writer = open_connection(settings)
+        try:
+            writer = write_batches(settings, writer, UPSERT_WEEKLY, weekly_rows, "weekly bars")
+            writer = write_batches(settings, writer, UPSERT_FEATURES, feature_rows, "features")
+            writer = write_batches(settings, writer, UPSERT_SECTOR, sector_rows, "sector rows")
+            if len(feature_rows) > 100_000:
+                # Rewriting many rows leaves dead ones behind, which quietly eats the
+                # storage budget. (VACUUM cannot run inside a transaction.)
+                for table in ("daily_features", "weekly_prices", "sector_features"):
+                    writer.execute(f"vacuum analyze public.{table}")
+                log.info("Tidied up storage after a full rebuild")
+        finally:
+            writer.close()
 
         run.rows_written = len(feature_rows) + len(weekly_rows) + len(sector_rows)
         run.message = (

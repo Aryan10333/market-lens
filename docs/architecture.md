@@ -38,6 +38,7 @@
 
  daily_prices + actions -> build_features -----> weekly_prices, daily_features
 
+ daily_features -------> classify_stages ----> daily_stages
  daily_features -------> run_scanners -------> signals (+ rule_versions)
 
  all tables ──────────> check_data ──────> report (fails the workflow on serious problems)
@@ -73,6 +74,7 @@ market-lens/
   requirements-dev.txt    Python packages for tests and style checks
   ruff.toml               Python style rules
   config/scanners.json    scanner thresholds (versioned)
+  config/stages.json      Stage analysis thresholds (versioned)
   jobs/                   Python jobs
     config.py             reads settings from .env
     log.py                JSON log lines
@@ -92,6 +94,8 @@ market-lens/
     build_features.py     job: prices -> weekly_prices, daily_features
     sectors.py            which NSE index represents each sector
     scanners.py           the five scanner rules
+    stages.py             Stage 1-4 rules and change confirmation
+    classify_stages.py    job: features -> daily_stages
     run_scanners.py       job: features -> signals
     check_data.py         job: data quality report
   tests/                  Python tests (pytest)
@@ -104,6 +108,8 @@ market-lens/
     src/lib/supabase/     Supabase clients (browser, server, proxy)
     src/app/page.tsx      home page
     src/app/scanner/      scanner results with "why it triggered"
+    src/app/stocks/       one company: charts, stage, numbers, signal history
+    src/components/       header, cards, theme switch, price chart
     src/lib/scanners.ts   plain-word descriptions of each scanner
     src/app/login/        login and sign-up page
     src/app/auth/confirm/ email confirmation link handler

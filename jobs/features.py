@@ -91,6 +91,10 @@ def build_features(
     volume = prices["volume"].astype("float64")
     out = pd.DataFrame(index=prices.index)
     out["close_adj"] = close
+    # Adjusted open/high/low as well, so charts can show candles on the same scale.
+    out["open_adj"] = prices["open"].astype("float64")
+    out["high_adj"] = prices["high"].astype("float64")
+    out["low_adj"] = prices["low"].astype("float64")
 
     for name, days in RETURN_WINDOWS.items():
         out[name] = _pct_change(close, days)

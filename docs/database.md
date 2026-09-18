@@ -195,6 +195,7 @@ Prices here are **split-adjusted**, so they can be compared across time.
 | pct_from_high_52w | How far below the 52-week high (0.032 = 3.2% below) |
 | pct_above_low_52w | How far above the 52-week low |
 | volatility_21d | Yearly volatility from the last 21 daily returns |
+| open_adj, high_adj, low_adj | Split-adjusted open/high/low, so charts can show candles |
 | range_high_120, range_low_120 | Consolidation range over 120 days, **ending yesterday** |
 | range_width_120 | Range height as a fraction of its low |
 | days_in_range | Days in a row the close stayed inside the range (0 = outside it now) |
@@ -260,6 +261,25 @@ One row per stock that triggered a scanner on a day.
 | created_at | When it was saved |
 
 One signal per company, day, scanner and rule version. Access: logged-in users read; jobs write.
+
+---
+
+## daily_stages
+
+Which stage each company was in on each day (1 basing, 2 advancing, 3 topping, 4 declining),
+written by `jobs.classify_stages`.
+
+| Column | Meaning |
+|---|---|
+| company_id, trade_date | The company and day |
+| stage | 1–4 |
+| stage_since | The day this stage started |
+| rule_version | Which rules decided it, e.g. `stage_v2` |
+| evidence | The checks behind the decision — **only on the day the stage changed**, empty afterwards |
+| calculated_at | When it was worked out |
+
+A change of stage only counts once the new one holds for 5 trading days, so a share crossing its
+30-week average does not flip stage every week.
 
 ---
 

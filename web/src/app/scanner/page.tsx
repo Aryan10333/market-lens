@@ -143,7 +143,16 @@ export default async function ScannerPage({ searchParams }: PageProps<"/scanner"
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <div className="flex items-baseline gap-2">
-                          <span className="font-semibold">{company?.nse_symbol ?? "—"}</span>
+                          {company?.nse_symbol ? (
+                            <Link
+                              href={`/stocks/${company.nse_symbol}`}
+                              className="font-semibold hover:text-brand hover:underline"
+                            >
+                              {company.nse_symbol}
+                            </Link>
+                          ) : (
+                            <span className="font-semibold">—</span>
+                          )}
                           <span className="truncate text-sm text-muted">{company?.name}</span>
                         </div>
                         {company?.sector && (
@@ -177,6 +186,14 @@ export default async function ScannerPage({ searchParams }: PageProps<"/scanner"
                         Rule <span className="font-mono">{s.rule_version}</span> ·{" "}
                         {dayMonth(s.trade_date)}
                       </p>
+                      {company?.nse_symbol && (
+                        <Link
+                          href={`/stocks/${company.nse_symbol}`}
+                          className="mt-2 inline-block text-sm text-brand hover:underline"
+                        >
+                          Open full analysis →
+                        </Link>
+                      )}
                     </details>
                   </Card>
                 </li>

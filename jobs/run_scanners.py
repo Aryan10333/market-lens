@@ -64,7 +64,7 @@ on conflict (company_id, trade_date, scanner, rule_version) do update
 """
 
 
-def register_rule_version(conn, config: dict) -> str:
+def register_rule_version(conn, config: dict, kind: str = "scanner") -> str:
     """Store the thresholds for this version, or check they have not changed."""
     version = config["version"]
     stored = conn.execute(
@@ -72,14 +72,14 @@ def register_rule_version(conn, config: dict) -> str:
     ).fetchone()
     if stored is None:
         conn.execute(
-            "insert into public.rule_versions (version, kind, config) values (%s, 'scanner', %s)",
-            (version, json.dumps(config)),
+            "insert into public.rule_versions (version, kind, config) values (%s, %s, %s)",
+            (version, kind, json.dumps(config)),
         )
         log.info("Rule version saved", extra={"fields": {"version": version}})
     elif stored[0] != config:
         raise RuntimeError(
-            f"config/scanners.json differs from the stored '{version}'. "
-            "Bump the version in the file so old signals stay explainable."
+            f"The configuration for '{version}' differs from the stored one. "
+            "Bump the version in the file so old results stay explainable."
         )
     return version
 

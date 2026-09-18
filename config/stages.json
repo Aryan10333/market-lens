@@ -1,0 +1,23 @@
+{
+  "version": "stage_v2",
+  "notes": "Thresholds for Stage analysis. Change a number here, or a rule in jobs/stages.py, and bump the version. v2: a stage change must hold for 5 days, and price below a still-rising average is Stage 3.",
+
+  "rising_slope": 0.02,
+  "confirm_days": 5,
+  "_confirm": "A different stage must hold for 5 trading days before it replaces the current one. Without this a share crossing its average daily flips stage every few days.",
+  "_rising": "30-week average up 2%+ over the last 10 weeks counts as rising; down 2%+ as falling; in between is flat.",
+
+  "stage2": {
+    "max_pct_from_high_52w": 0.25,
+    "min_rs_rank_63d": 40.0,
+    "_comment": "Advancing: above a rising 30-week average, within 25% of the 52-week high, and not among the weakest stocks. Being above the average alone is NOT Stage 2."
+  },
+
+  "_stage3": "Topping needs no threshold of its own: it is what is left when the advance stalls - the average flattens, or price slips below an average that is still rising.",
+
+  "stage1": {
+    "min_days_in_range": 40,
+    "max_pct_above_low_52w": 0.35,
+    "_comment": "Basing: flat 30-week average, price stuck in a range near its lows. Watch, do not buy."
+  }
+}

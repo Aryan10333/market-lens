@@ -4,6 +4,28 @@ Newest entries at the top. One entry per working session.
 
 ---
 
+## 2026-09-18: Step 4 Stock analysis page
+
+- Stage analysis (`jobs/stages.py`, `config/stages.json`, `stage_v2`): four stages from the
+  30-week average, price structure and relative strength, with stored evidence. 259,675
+  company-days classified; on 17 Sep: basing 70, advancing 152, topping 147, declining 131.
+- **A stage change must hold 5 days.** Before that, RELIANCE flipped stage every few days; now
+  ~12 changes per company over three years.
+- **Fixed: recent listings marked "declining"** while their 30-week average was rising - below a
+  rising average is Stage 3, not 4 (GROWW, ICICIAMC corrected; VEDL, RPOWER still Stage 4).
+- Stock page `/stocks/<symbol>`: daily and weekly candles with the 30-week average and volume
+  (lightweight-charts, follows the theme), stat tiles, stage card with evidence, technical numbers,
+  and signal history. Scanner results link to it.
+- **Fixed: the database nearly filled up** (492 MB of 500 MB). Two causes: rebuilds left dead rows,
+  and `daily_stages` stored evidence for every day (193 MB). Evidence is now kept only on the day
+  the stage changed, plus a `stage_since` date. Now 224 MB.
+- **Fixed: a dropped connection lost a whole rebuild.** Writes go in batches of 10,000 with
+  reconnect; the helper moved to `jobs/db.py` and is shared by all jobs.
+- 16 new tests (100 total).
+- Next: Step 5, the first AI report over the stored evidence.
+
+---
+
 ## 2026-09-18: Interface redesign
 
 - Design system in `globals.css`: colours named by role (surface, muted, positive, brand, one per

@@ -149,3 +149,26 @@ Each decision: what we chose, and why. Newest decisions go at the bottom.
 - **Why:** Rewriting 351k feature rows left dead rows that pushed the database from 190 MB to
   313 MB without adding any data. Tidying brought it back to 186 MB. On the free 500 MB plan that
   difference matters.
+
+## D19. A stage change must hold for five days
+
+- **Chosen:** A share keeps its stage until a different one holds for 5 trading days.
+- **Why:** Without it, a share wobbling around its 30-week average changed stage every few days —
+  RELIANCE flipped between Stage 1 and 3 six times in eight months. Now it changes about six times
+  in three years, and a change means something.
+- **Cost:** A genuine change is dated up to four days late. That is the right trade for a method
+  whose holding period is months.
+
+## D20. Evidence is stored on the day a decision was made
+
+- **Chosen:** `daily_stages` keeps the full evidence only on the day the stage changed, plus a
+  `stage_since` date on every row.
+- **Why:** Storing evidence for every day made that table 193 MB for 260k rows — bigger than the
+  prices it came from, and it pushed the database to 492 MB of the 500 MB free limit. The stage
+  table is now about 12 MB, and the page still shows exactly why the stock is in this stage.
+
+## D21. Large writes go in batches
+
+- **Chosen:** Jobs write in batches of 10,000 rows, each batch retried on a fresh connection if the
+  old one drops. The helper lives in `jobs/db.py` and is shared by every job.
+- **Why:** Writing 351k feature rows in one transaction lost everything when the laptop slept.

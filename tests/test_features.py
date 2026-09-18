@@ -139,6 +139,14 @@ def test_relative_strength_against_benchmark():
     assert last["rs_change_63d"] > 0  # beating a flat market
 
 
+def test_adjusted_open_high_low_are_kept_for_charts():
+    prices = make_prices([100, 110])
+    out = build_features(prices)
+    assert list(out["high_adj"]) == list(prices["high"])
+    assert list(out["low_adj"]) == list(prices["low"])
+    assert list(out["open_adj"]) == list(prices["open"])
+
+
 def test_features_are_stamped_with_a_version():
     features = build_features(make_prices([100] * 5))
     assert set(features["feature_version"]) == {"features_v1"}

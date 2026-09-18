@@ -19,15 +19,12 @@ Run:
 import argparse
 import logging
 import sys
-import time
 from datetime import date, timedelta
 from functools import partial
 
-import psycopg
-
 from jobs.config import ConfigError, load_settings
 from jobs.dates import all_days, today_ist, years_before
-from jobs.db import connect
+from jobs.db import open_connection, with_reconnect
 from jobs.download import Downloader, unzip_single
 from jobs.log import setup_logging
 from jobs.runs import JobRun
@@ -165,32 +162,6 @@ def _no_file(conn, kind, day, record) -> str:
     if record:
         conn.execute(UPSERT_FILE, (kind, day, "no_file", None, None, 0, 0, 0))
     return "no_file"
-
-
-def open_connection(settings):
-    conn = connect(settings)
-    conn.autocommit = True  # each `with conn.transaction()` is then its own transaction
-    return conn
-
-
-def with_reconnect(settings, conn, work, what: str):
-    """Run work(conn). If the database connection drops (laptop sleep, network blip),
-    open a new one and try again. Returns (result, connection to keep using)."""
-    for attempt in range(1, 4):
-        try:
-            return work(conn), conn
-        except psycopg.OperationalError as exc:
-            log.warning(
-                "Database connection lost, reconnecting",
-                extra={"fields": {"task": what, "attempt": attempt, "error": str(exc)[:200]}},
-            )
-            try:
-                conn.close()
-            except Exception:
-                pass
-            time.sleep(5 * attempt)
-            conn = open_connection(settings)
-    raise RuntimeError(f"Could not reach the database while doing: {what}")
 
 
 def main() -> int:
