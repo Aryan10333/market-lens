@@ -1,26 +1,147 @@
 @import "tailwindcss";
 
+/* Dark mode is driven by a class on <html>, set before paint by the script in layout.tsx,
+   so the page never flashes the wrong theme. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ---------------------------------------------------------------------------
+   Colours. Light is the base; the dark block only swaps the values.
+   Named by role (surface, muted, positive) rather than by colour, so the
+   meaning stays clear in both themes.
+--------------------------------------------------------------------------- */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: light;
+
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --surface-2: #f2f4f7;
+  --border: #e3e6ea;
+  --border-strong: #cdd3db;
+
+  --text: #111827;
+  --text-muted: #5b6573;
+  --text-faint: #8a94a3;
+
+  --brand: #1d4ed8;
+  --brand-soft: #e6edfd;
+  --on-brand: #ffffff;
+
+  --positive: #15803d;
+  --positive-soft: #e6f4ea;
+  --negative: #b91c1c;
+  --negative-soft: #fdeaea;
+  --warning: #a16207;
+  --warning-soft: #fdf3da;
+
+  /* Scanner accents: one colour per screen, kept distinguishable in both themes. */
+  --scan-surge: #b45309;
+  --scan-surge-soft: #fdf0dd;
+  --scan-volume: #6d28d9;
+  --scan-volume-soft: #efe8fd;
+  --scan-breakout: #047857;
+  --scan-breakout-soft: #e0f3ec;
+  --scan-high: #1d4ed8;
+  --scan-high-soft: #e6edfd;
+  --scan-sector: #0e7490;
+  --scan-sector-soft: #e0f2f6;
+
+  --ring: #93b4f7;
+  --shadow: 0 1px 2px rgb(16 24 40 / 0.06), 0 1px 3px rgb(16 24 40 / 0.1);
+}
+
+.dark {
+  color-scheme: dark;
+
+  --bg: #0b0f16;
+  --surface: #141a23;
+  --surface-2: #1b2430;
+  --border: #253040;
+  --border-strong: #35435a;
+
+  --text: #e8eef7;
+  --text-muted: #9aa8bc;
+  --text-faint: #71809a;
+
+  --brand: #7aa5ff;
+  --brand-soft: #16233c;
+  --on-brand: #0b0f16;
+
+  --positive: #56d68b;
+  --positive-soft: #10281c;
+  --negative: #ff8080;
+  --negative-soft: #2d1618;
+  --warning: #f0c060;
+  --warning-soft: #2a2113;
+
+  --scan-surge: #f2b563;
+  --scan-surge-soft: #2a2113;
+  --scan-volume: #b79aff;
+  --scan-volume-soft: #201a38;
+  --scan-breakout: #5ed6a8;
+  --scan-breakout-soft: #0f2a22;
+  --scan-high: #7aa5ff;
+  --scan-high-soft: #16233c;
+  --scan-sector: #5ec7dd;
+  --scan-sector-soft: #10262d;
+
+  --ring: #3d6bbd;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 1px 3px rgb(0 0 0 / 0.3);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--border);
+  --color-line-strong: var(--border-strong);
+
+  --color-text: var(--text);
+  --color-muted: var(--text-muted);
+  --color-faint: var(--text-faint);
+
+  --color-brand: var(--brand);
+  --color-brand-soft: var(--brand-soft);
+  --color-on-brand: var(--on-brand);
+
+  --color-positive: var(--positive);
+  --color-positive-soft: var(--positive-soft);
+  --color-negative: var(--negative);
+  --color-negative-soft: var(--negative-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+
+  --color-scan-surge: var(--scan-surge);
+  --color-scan-surge-soft: var(--scan-surge-soft);
+  --color-scan-volume: var(--scan-volume);
+  --color-scan-volume-soft: var(--scan-volume-soft);
+  --color-scan-breakout: var(--scan-breakout);
+  --color-scan-breakout-soft: var(--scan-breakout-soft);
+  --color-scan-high: var(--scan-high);
+  --color-scan-high-soft: var(--scan-high-soft);
+  --color-scan-sector: var(--scan-sector);
+  --color-scan-sector-soft: var(--scan-sector-soft);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Numbers line up in columns and keep a constant width while they change. */
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--brand-soft);
+  color: var(--text);
 }

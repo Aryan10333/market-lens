@@ -1,3 +1,4 @@
+import { ThemeToggle } from "@/components/theme";
 import { login, signup } from "./actions";
 
 export default async function LoginPage({ searchParams }: PageProps<"/login">) {
@@ -6,42 +7,79 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   const message = typeof params.message === "string" ? params.message : null;
 
   return (
-    <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center gap-6 px-4 py-12">
-      <div>
-        <h1 className="text-2xl font-semibold">Market Lens</h1>
-        <p className="text-sm text-neutral-500">Log in or create an account.</p>
+    <div className="flex min-h-full flex-1 flex-col">
+      <div className="flex justify-end p-4">
+        <ThemeToggle />
       </div>
 
-      {error && <p className="rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800">{error}</p>}
-      {message && (
-        <p className="rounded border border-green-300 bg-green-50 p-3 text-sm text-green-800">{message}</p>
-      )}
+      <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center gap-6 px-4 pb-16">
+        <div className="text-center">
+          <span
+            aria-hidden
+            className="mx-auto grid size-11 place-items-center rounded-xl bg-brand text-lg font-bold text-on-brand"
+          >
+            M
+          </span>
+          <h1 className="mt-3 text-2xl font-semibold">Market Lens</h1>
+          <p className="mt-1 text-sm text-muted">
+            Scanner and stock research for NSE and BSE, built on the TechnoFunda method.
+          </p>
+        </div>
 
-      <form className="flex flex-col gap-3">
-        <label className="flex flex-col gap-1 text-sm">
-          Email
-          <input name="email" type="email" required autoComplete="email" className="rounded border px-3 py-2" />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          Password
-          <input
-            name="password"
-            type="password"
-            required
-            minLength={8}
-            autoComplete="current-password"
-            className="rounded border px-3 py-2"
-          />
-        </label>
-        <div className="flex gap-2 pt-2">
-          <button formAction={login} className="flex-1 rounded bg-neutral-900 px-3 py-2 text-white">
+        {error && (
+          <p className="rounded-lg border border-negative/40 bg-negative-soft px-3 py-2 text-sm text-negative">
+            {error}
+          </p>
+        )}
+        {message && (
+          <p className="rounded-lg border border-positive/40 bg-positive-soft px-3 py-2 text-sm text-positive">
+            {message}
+          </p>
+        )}
+
+        <form className="flex flex-col gap-3 rounded-xl border border-line bg-surface p-5 shadow-[var(--shadow)]">
+          <label className="flex flex-col gap-1.5 text-sm">
+            <span className="font-medium">Email</span>
+            <input
+              name="email"
+              type="email"
+              required
+              autoComplete="email"
+              placeholder="you@example.com"
+              className="rounded-lg border border-line bg-surface-2 px-3 py-2 placeholder:text-faint"
+            />
+          </label>
+          <label className="flex flex-col gap-1.5 text-sm">
+            <span className="font-medium">Password</span>
+            <input
+              name="password"
+              type="password"
+              required
+              minLength={8}
+              autoComplete="current-password"
+              placeholder="At least 8 characters"
+              className="rounded-lg border border-line bg-surface-2 px-3 py-2 placeholder:text-faint"
+            />
+          </label>
+
+          <button
+            formAction={login}
+            className="mt-1 rounded-lg bg-brand px-3 py-2 font-medium text-on-brand transition-opacity hover:opacity-90"
+          >
             Log in
           </button>
-          <button formAction={signup} className="flex-1 rounded border px-3 py-2">
-            Sign up
+          <button
+            formAction={signup}
+            className="rounded-lg border border-line px-3 py-2 text-sm text-muted transition-colors hover:bg-surface-2 hover:text-text"
+          >
+            Create an account
           </button>
-        </div>
-      </form>
-    </main>
+        </form>
+
+        <p className="text-center text-xs text-faint">
+          New accounts need an email confirmation before the first login.
+        </p>
+      </main>
+    </div>
   );
 }

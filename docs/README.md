@@ -9,8 +9,9 @@ Read in this order:
 | 3 | [roadmap.md](roadmap.md) | All build steps and their status |
 | 4 | [setup.md](setup.md) | How to set up accounts and run the app |
 | 5 | [database.md](database.md) | Every database table and what it stores |
-| 6 | [progress-log.md](progress-log.md) | Dated log of work done |
-| 7 | [steps/](steps/) | One file per build step with details |
+| 6 | [design.md](design.md) | Colours, dark mode and shared components |
+| 7 | [progress-log.md](progress-log.md) | Dated log of work done |
+| 8 | [steps/](steps/) | One file per build step with details |
 
 Source documents (the original requirements):
 

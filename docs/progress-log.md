@@ -4,6 +4,24 @@ Newest entries at the top. One entry per working session.
 
 ---
 
+## 2026-09-18: Interface redesign
+
+- Design system in `globals.css`: colours named by role (surface, muted, positive, brand, one per
+  scanner), each with light and dark values. Details in [design.md](design.md).
+- **Light / Dark / System** switch in the header. A small script applies the saved theme before the
+  first paint, so there is no white flash. "System" follows the device setting live.
+- Shared components (`web/src/components/`): `AppHeader` with navigation, `Card`, `Stat`, `Badge`,
+  `ScannerTag`, `EmptyState`, `StatusDot`.
+- Dashboard rebuilt: Nifty 500 level with the day's move (green/red), universe size, signal count,
+  history range, scanner totals as coloured links, and a job table with status dots.
+- Scanner page rebuilt: coloured filter chips per screen with counts, two-column signal cards, a
+  coloured stripe on each headline, and "Why it triggered" as an expandable evidence grid.
+- Login page rebuilt with the same look, including the theme switch before signing in.
+- Theme state uses `useSyncExternalStore` (the lint rule against `setState` in an effect was right:
+  the theme lives in localStorage and the OS setting, not in React).
+
+---
+
 ## 2026-09-18: Step 3 Scanner V1
 
 - Five scanners as pure functions (`jobs/scanners.py`) with thresholds in `config/scanners.json`,

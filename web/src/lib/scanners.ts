@@ -81,6 +81,28 @@ export const SCANNERS: Record<string, ScannerInfo> = {
   },
 };
 
+/** Accent colour token for each scanner (defined in globals.css). */
+const COLOURS: Record<string, string> = {
+  price_volume_surge: "scan-surge",
+  volume_expansion: "scan-volume",
+  consolidation_breakout: "scan-breakout",
+  new_high_breakout: "scan-high",
+  sector_trend: "scan-sector",
+};
+
+export function scannerColour(key: string): string {
+  return COLOURS[key] ?? "scan-high";
+}
+
+/** The order the methodology applies them: price-volume first, then structure. */
+export const SCANNER_ORDER = [
+  "price_volume_surge",
+  "volume_expansion",
+  "consolidation_breakout",
+  "new_high_breakout",
+  "sector_trend",
+];
+
 export function scannerInfo(key: string): ScannerInfo {
   return (
     SCANNERS[key] ?? {
